@@ -1,0 +1,17 @@
+{
+  "description": "QUBO / Ising coupling matrices for the hybrid quantum--classical token-factory study (48-qubit hourly storage master). Market/operator raw data are not redistributed; these Q matrices are derived artefacts that may be versioned.",
+  "canonical_master": "storage_master_48_Q.npy",
+  "n_qubits": 48,
+  "files": [
+    "MANIFEST.json",
+    "legacy_separable_compute_discharge_Q.csv",
+    "legacy_separable_compute_discharge_Q.npy",
+    "legacy_separable_compute_discharge_const.npy",
+    "legacy_separable_compute_discharge_meta.json",
+    "storage_master_48_Q.csv",
+    "storage_master_48_Q.npy",
+    "storage_master_48_const.npy",
+    "storage_master_48_meta.json",
+    "storage_master_48_metrics.json"
+  ]
+}

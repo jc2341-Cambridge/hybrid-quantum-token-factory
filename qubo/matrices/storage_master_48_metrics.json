@@ -1,0 +1,9 @@
+{
+  "e_star": -28101.663531519647,
+  "cim_card_feasible_pct": 33.33333333333333,
+  "uniform_bits_feasible_pct": 0.005,
+  "sa_median_gap": 28555.198108740587,
+  "uni_median_gap": 52827.83997598261,
+  "pair_jitter": 2200.0,
+  "n_qubits": 48
+}

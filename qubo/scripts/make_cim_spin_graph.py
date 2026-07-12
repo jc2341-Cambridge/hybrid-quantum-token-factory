@@ -6,10 +6,6 @@ notation strip are omitted by request.
 """
 from __future__ import annotations
 
-from paths import ROOT
-_LOCAL_FIG = ROOT / 'figures'
-_LOCAL_FIG.mkdir(parents=True, exist_ok=True)
-
 import shutil
 from pathlib import Path
 
@@ -20,7 +16,11 @@ import numpy as np
 from matplotlib.patches import Circle, Ellipse, FancyBboxPatch, Rectangle
 
 HERE = Path(__file__).parent
-OUTS = [_LOCAL_FIG]
+OUTS = [
+    HERE.parent / "latex" / "FINAL-FIGURES",
+    HERE.parent / "latex" / "figures",
+    HERE.parent / "latex" / "real-data-figures",
+]
 for d in OUTS:
     d.mkdir(parents=True, exist_ok=True)
 
@@ -85,8 +85,8 @@ def main():
     # Title in the same pattern as the QAOA circuit figure.
     ax.text(
         0.15, 8.05,
-        r"CIM spin graph for the 16-spin scheduling block "
-        r"(compute / discharge cliques; same $H_C$ as gate-model QAOA)",
+        r"CIM spin graph for the 16-spin storage master "
+        r"(charge / discharge; same $H_C$ as gate-model QAOA)",
         fontsize=11, fontweight="bold", va="center",
     )
 
@@ -98,7 +98,7 @@ def main():
     ax.add_patch(Rectangle((7.55, box_y0), 6.55, box_h, facecolor=ORANGE,
                            edgecolor=ORANGE_E, lw=0.9, linestyle=(0, (4, 3)),
                            zorder=1))
-    ax.text(0.55, box_y0 + 0.18, "compute spin", ha="left", va="bottom",
+    ax.text(0.55, box_y0 + 0.18, "charge spin", ha="left", va="bottom",
             fontsize=8.2, color=BLUE_E, zorder=8)
     ax.text(7.75, box_y0 + 0.18, "discharge spin", ha="left", va="bottom",
             fontsize=8.2, color=ORANGE_E, zorder=8)
@@ -125,7 +125,7 @@ def main():
             color=BLUE_E, lw=1.7, zorder=3)
     ax.text(0.5 * (pts_x[0][0] + pts_x[3][0]) - 0.18,
             0.5 * (pts_x[0][1] + pts_x[3][1]) + 0.22,
-            r"$J_{x_1x_4}$", fontsize=7.4, color=BLUE_E, ha="center")
+            r"$J_{c_1c_4}$", fontsize=7.4, color=BLUE_E, ha="center")
     ax.plot([pts_d[1][0], pts_d[6][0]], [pts_d[1][1], pts_d[6][1]],
             color=ORANGE_E, lw=1.7, zorder=3)
     ax.text(0.5 * (pts_d[1][0] + pts_d[6][0]) + 0.18,
@@ -133,7 +133,7 @@ def main():
             r"$J_{d_2d_7}$", fontsize=7.4, color=ORANGE_E, ha="center")
 
     for b, (px, pd) in enumerate(zip(pts_x, pts_d), start=1):
-        spin_node(ax, px, rf"$s_{{x_{b}}}$", X_FC, BLUE_E)
+        spin_node(ax, px, rf"$s_{{c_{b}}}$", X_FC, BLUE_E)
         spin_node(ax, pd, rf"$s_{{d_{b}}}$", D_FC, ORANGE_E)
         # No field arrows on bottom-ring vertices (b=1,8): they press the
         # panel floor and the bottom-right corner.
@@ -193,15 +193,18 @@ def main():
             ha="center", va="center", fontsize=8.4, color=GREEN_E,
             fontweight="bold", zorder=6)
     ax.text(10.90, 2.12,
-            "decode $(x_b,d_b)$ to block schedule\n"
-            r"same $H_C$ as gate-model QAOA ($s_i=1-2x_i$)",
+            "decode $(c_b,d_b)$ to storage masks\n"
+            r"same $H_C$ as gate-model QAOA ($s_i=1-2z_i$)",
             ha="center", va="center", fontsize=7.6, color=WIRE, zorder=6)
 
+    # Also sync Plasma-style.
     name = "fig05b_cim_spin_graph.png"
     primary = OUTS[0] / name
     fig.savefig(primary, bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    for dest in OUTS[1:]:
+    plasma = HERE.parent / "latex" / "Plasma-style"
+    plasma.mkdir(parents=True, exist_ok=True)
+    for dest in list(OUTS[1:]) + [plasma]:
         shutil.copy2(primary, dest / name)
     print(f"Wrote {primary}")
 

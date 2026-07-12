@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from paths import ensure_output
 
 import numpy as np
 import pandas as pd
@@ -14,7 +13,8 @@ from revised_dispatch import solve_revised_dispatch, workload_profiles
 from solvers import solve_exact
 
 HERE = Path(__file__).parent
-OUT = ensure_output()
+OUT = HERE / "output_revised"
+OUT.mkdir(parents=True, exist_ok=True)
 BLOCK = 3
 N_BLOCKS = m.T_SLOTS // BLOCK
 

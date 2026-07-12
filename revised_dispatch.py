@@ -55,6 +55,8 @@ def solve_revised_dispatch(
     qubo_high_blocks: np.ndarray | None = None,
     qubo_min_high_hours: int = 2,
     qubo_dis_blocks: np.ndarray | None = None,
+    qubo_ch_blocks: np.ndarray | None = None,
+    allow_infeasible: bool = False,
 ) -> dict:
     """Solve the workload-conserving dispatch as a MILP.
 
@@ -73,7 +75,15 @@ def solve_revised_dispatch(
     lam = m.CARBON_PRICE if carbon_price is None else carbon_price
 
     total_arr, interactive, batch_arr = workload_profiles()
-    r = m.throughput_mtok_h(m.U_LEVELS) * m.DT_H
+    # Raw throughput keeps the contracted 3024 Mtok workload feasible.
+    # Path B enters as an SLO shortfall penalty on levels with phi_mix < 1
+    # (fixed class SLAs + TTFT contention), so high utilisation yields less
+    # useful work per raw token and is economically disfavoured.
+    r = np.array([float(m.R_MAX_MTOK_H * u) for u in m.U_LEVELS], dtype=float)
+    phi = np.array([float(m.phi_mix(u)) for u in m.U_LEVELS], dtype=float)
+    r_raw = r.copy()
+    # USD per Mtoken of raw output that fails the mix-weighted class SLAs.
+    SLO_SHORTFALL_USD_PER_MTOK = 25.0
     p_fac = np.array([
         [float(m.facility_power_kw(u, t_amb[t])) for u in m.U_LEVELS]
         for t in range(T)
@@ -96,6 +106,11 @@ def solve_revised_dispatch(
         obj[d_idx(t)] += (
             DEGRADATION_USD_PER_KWH_DISCHARGED * m.P_DIS_KW * m.DT_H
         )
+        for k in range(K):
+            # Path B: penalise raw tokens that are not SLO-feasible.
+            obj[x_idx(t, k)] += (
+                SLO_SHORTFALL_USD_PER_MTOK * (1.0 - phi[k]) * r_raw[k]
+            )
 
     A: list[np.ndarray] = []
     lb: list[float] = []
@@ -222,6 +237,17 @@ def solve_revised_dispatch(
                 add(a, 1.0, float(len(hours)))
             else:
                 add(a, 0.0, 0.0)
+    if qubo_ch_blocks is not None:
+        mask = np.asarray(qubo_ch_blocks, dtype=int)
+        for b, flag in enumerate(mask):
+            hours = list(range(b * block_hours, min((b + 1) * block_hours, T)))
+            a = np.zeros(n)
+            for t in hours:
+                a[c_idx(t)] = 1.0
+            if flag:
+                add(a, 1.0, float(len(hours)))
+            else:
+                add(a, 0.0, 0.0)
 
     lower = np.zeros(n)
     upper = np.full(n, np.inf)
@@ -241,6 +267,16 @@ def solve_revised_dispatch(
     )
     elapsed = time.perf_counter() - t0
     if res.x is None:
+        if allow_infeasible:
+            return {
+                "success": False,
+                "feasible": False,
+                "message": str(res.message),
+                "solve_time_s": elapsed,
+                "total_cost_usd": np.inf,
+                "emissions_kg": np.inf,
+                "objective": np.inf,
+            }
         raise RuntimeError(f"Revised MILP failed: {res.message}")
 
     xb = np.rint(res.x[:nb]).astype(int)
@@ -253,6 +289,7 @@ def solve_revised_dispatch(
     soc = np.array([res.x[s_idx(t)] for t in range(T + 1)])
     grid = np.array([res.x[g_idx(t)] for t in range(T)])
     throughput = r[levels]
+    throughput_raw = r_raw[levels]
     batch_service = throughput - interactive
     backlog = np.cumsum(batch_arr - batch_service)
 
@@ -264,7 +301,12 @@ def solve_revised_dispatch(
         * m.DT_H
         * discharge.sum()
     )
+    slo_shortfall_cost = float(
+        SLO_SHORTFALL_USD_PER_MTOK
+        * ((1.0 - phi[levels]) * throughput_raw).sum()
+    )
     useful_tokens = float(total_arr.sum())
+    effective_tokens = float((phi[levels] * throughput_raw).sum())
     return {
         "levels": levels,
         "charge": charge,
@@ -276,8 +318,11 @@ def solve_revised_dispatch(
         "batch_service_Mtok": batch_service,
         "backlog_Mtok": backlog,
         "useful_tokens_Mtok": useful_tokens,
+        "effective_tokens_Mtok": effective_tokens,
+        "raw_tokens_Mtok": float(throughput_raw.sum()),
         "energy_cost_usd": energy_cost,
         "degradation_cost_usd": degradation_cost,
+        "slo_shortfall_cost_usd": slo_shortfall_cost,
         "total_cost_usd": energy_cost + degradation_cost,
         "emissions_kg": emissions_kg,
         "usd_per_Mtok": (energy_cost + degradation_cost) / useful_tokens,
@@ -288,6 +333,7 @@ def solve_revised_dispatch(
         "solve_time_s": elapsed,
         "mip_gap": float(getattr(res, "mip_gap", np.nan)),
         "success": bool(res.success),
+        "feasible": True,
         "message": res.message,
     }
 

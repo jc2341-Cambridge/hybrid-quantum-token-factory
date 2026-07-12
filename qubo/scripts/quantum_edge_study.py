@@ -13,7 +13,6 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from paths import ensure_output
 
 import numpy as np
 import pandas as pd
@@ -23,7 +22,8 @@ from revised_dispatch import solve_revised_dispatch
 from solvers import QaoaSimulator, solve_annealing, solve_exact
 
 HERE = Path(__file__).parent
-OUT = ensure_output()
+OUT = HERE / "output_revised"
+OUT.mkdir(parents=True, exist_ok=True)
 N_SHOTS = 8192
 N_TRIALS = 10
 SEED = 7
