@@ -1,0 +1,6 @@
+# Data files are supplied locally (or regenerated) and are not committed.
+# Keep folder structure and templates only.
+*
+!.gitignore
+!_templates/
+!_templates/**
