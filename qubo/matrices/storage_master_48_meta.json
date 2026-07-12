@@ -1,14 +1,12 @@
 {
-  "name": "storage_master_48",
-  "n": 48,
-  "const": 160000.0,
-  "kind": "storage_master",
   "n_qubits": 48,
   "n_blocks": 24,
   "hours_per_block": 1,
   "charge_blocks": 4,
   "dis_blocks": 4,
+  "penalty": 5000.0,
   "encoding": "q0..q23=charge; q24..q47=discharge",
+  "const": 160000.0,
   "tariff_b": [
     0.13580787022441737,
     0.13580787022441737,
@@ -39,7 +37,7 @@
   "adj_weight": 120.0,
   "exclusivity_weight": 800.0,
   "tariff_pair_weight": 0.35,
+  "sa_incumbent_energy": -15287.127596749458,
   "pair_jitter": 2200.0,
-  "jitter_seed": 48,
-  "note": "48-qubit hourly charge--discharge master with SOC-path, tariff-pair, adjacency, exclusivity, and seeded pair jitter. Upload storage_master_48_Q.npy to CIM."
+  "jitter_seed": 48
 }

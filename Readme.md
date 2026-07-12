@@ -14,9 +14,10 @@ This folder is self-contained. Runnable scripts load inputs from relative `data/
 
 | Upload? | Content |
 |---------|---------|
-| **Yes — commit** | `qubo/matrices/storage_master_48_Q.npy` (+ `.csv`, `_const.npy`, `_meta.json`, `_metrics.json`) |
-| **Yes — commit** | `qubo/matrices/legacy_separable_compute_discharge_*` (negative control) |
+| **Yes — commit / CIM** | `qubo/matrices/storage_master_48_Q.npy` + `_const.npy` + `_meta.json` |
+| **Yes — commit** | `qubo/matrices/legacy_separable_compute_discharge_*` (negative control, `.npy` + meta) |
 | **Yes — commit** | `qubo/builders.py`, `solvers.py`, `hybrid_decomposition.py`, `export_matrices.py` |
+| **No** | CSV dumps of \(Q\) (not used for CIM load) |
 | **No** | Raw market / operator CSVs (`data/01_market/` is typically gitignored) |
 | **No** | Runtime `qubo/output/`, `output/`, `figures/` |
 
@@ -33,7 +34,7 @@ const = float(np.load("qubo/matrices/storage_master_48_const.npy")[0])
 # Energy: E = x @ Q @ x + const,  x in {0,1}^48
 ```
 
-Upload **`storage_master_48_Q.npy`** to the CIM.
+**CIM upload:** `storage_master_48_Q.npy` (primary). Details in [`qubo/README.md`](qubo/README.md).
 
 ---
 

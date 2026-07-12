@@ -1,39 +1,55 @@
 # QUBO / Ising package
 
-Self-contained folder for the **quantum layer** of the hybrid classical–quantum
-token-factory study: QUBO builders, solvers, hybrid decomposition (Paths B/C),
-and **versionable coupling matrices**.
+Quantum layer of the hybrid classical–quantum token-factory study:
+builders, solvers, hybrid cuts, and **versioned coupling matrices for CIM upload**.
 
-## Canonical encoding (manuscript)
+## CIM upload (use these three files)
+
+Upload the **48-qubit storage master** from `matrices/`:
+
+| File | Role |
+|------|------|
+| **`storage_master_48_Q.npy`** | Dense \(48\times 48\) QUBO matrix \(Q\) (primary CIM / Ising input) |
+| **`storage_master_48_const.npy`** | Scalar offset \(q_0\) (shape `(1,)`) |
+| **`storage_master_48_meta.json`** | Encoding, budgets, tariff biases, coupling weights |
+
+**Do not use CSV.** Machine loaders should take the NumPy matrix.
+
+### Encoding
 
 | Item | Value |
 |------|-------|
 | Qubits | **48** |
-| Hours | 24 × 1 h |
-| Charge bits | `q0..q23` = \(c_t\) |
-| Discharge bits | `q24..q47` = \(d_t\) |
-| Budgets | \(\sum c = 4\), \(\sum d = 4\) |
+| Charge | `q0..q23` = hourly \(c_t\) |
+| Discharge | `q24..q47` = hourly \(d_t\) |
+| Budgets | \(\sum_t c_t = 4\), \(\sum_t d_t = 4\) |
 | Search space | \(2^{48}\) (sample-based diagnostics) |
-| CIM upload | `matrices/storage_master_48_Q.npy` |
 
-Energy: \(E = x^\top Q x + q_0\) with \(x \in \{0,1\}^{48}\).
+### Energy
 
----
+\[
+E(\mathbf{x}) = \mathbf{x}^{\top} Q \mathbf{x} + q_0,
+\qquad \mathbf{x}\in\{0,1\}^{48}.
+\]
 
-## What is uploaded vs what is not
+```python
+import numpy as np
 
-| Content | In this folder? | Notes |
-|---------|-----------------|-------|
-| **48-qubit** storage-master Q (`.npy` + `.csv` + meta) | **Yes — commit** | Derived; no proprietary market traces |
-| Legacy separable 16-qubit Q (negative control) | **Yes — commit** | Top-tariff / old QUBO |
-| Builders (`builders.py`) | **Yes** | Default `build_storage_master_qubo()` → 48 qubits |
-| Exact / annealing / QAOA solvers (`solvers.py`) | **Yes** | Sample-based for \(n=48\) |
-| Hybrid Path B / Path C (`hybrid_decomposition.py`) | **Yes** | Master ↔ MILP with cuts |
-| Schematic scripts (CIM / QAOA / fig13) | **Yes** under `scripts/` | Figure generators |
-| Raw market / operator CSVs | **No** | Parent `data/` (often gitignored) |
-| Runtime `output/` | **No** | gitignored |
+Q = np.load("qubo/matrices/storage_master_48_Q.npy")          # (48, 48)
+q0 = float(np.load("qubo/matrices/storage_master_48_const.npy")[0])
+# E = x @ Q @ x + q0
+```
 
-**Removed (outdated):** 16-qubit block-aggregated `storage_master_*`, `full_120binary_*`.
+If the CIM expects Ising \((J,h)\) rather than QUBO \(Q\), convert with the paper map
+\(s_i = 1-2z_i\) (standard QUBO⇄Ising); the uploaded object of record remains `storage_master_48_Q.npy`.
+
+### Hardware sampling checklist
+
+1. Load `storage_master_48_Q.npy` (+ `const` if the driver needs the absolute energy).
+2. Draw bitstrings (equal sample budget vs any classical baseline).
+3. Score each sample with \(E = x^{\top}Qx + q_0\).
+4. Optional: filter or report cardinality feasibility (\(\sum c=4\), \(\sum d=4\)).
+5. Histogram energy above the incumbent for Fig.~4(b)-style panels.
 
 ---
 
@@ -42,70 +58,36 @@ Energy: \(E = x^\top Q x + q_0\) with \(x \in \{0,1\}^{48}\).
 ```
 qubo/
 ├── README.md
-├── __init__.py
-├── builders.py               ← Qubo + build_storage_master_qubo (48 default)
+├── builders.py
 ├── solvers.py
 ├── hybrid_decomposition.py
 ├── export_matrices.py
-├── matrices/                 ← **commit these**
+├── matrices/                 ← commit .npy + meta (no CSV)
 │   ├── MANIFEST.json
-│   ├── storage_master_48_Q.npy / .csv / _const.npy / _meta.json / _metrics.json
-│   └── legacy_separable_compute_discharge_Q.*
-├── scripts/
-└── output/                   ← runtime (gitignored)
+│   ├── storage_master_48_Q.npy      ← CIM upload
+│   ├── storage_master_48_const.npy
+│   ├── storage_master_48_meta.json
+│   └── legacy_separable_compute_discharge_*   (negative control only)
+└── scripts/
 ```
 
-Run commands from **`code-to-commit/`**.
-
----
-
-## Matrices
-
-### 1. `storage_master_48` — paper master (CIM / Path B–C)
-
-- **Size:** 48 × 48  
-- **Coupling:** tariff biases + nested SOC-path + terminal balance + adjacency +
-  tariff-product pairs + same-hour exclusivity + seeded pair jitter  
-- **Not** equal to the top-tariff greedy / old-QUBO control  
-
-```python
-import numpy as np
-Q = np.load("qubo/matrices/storage_master_48_Q.npy")
-const = float(np.load("qubo/matrices/storage_master_48_const.npy")[0])
-```
-
-```python
-from qubo.builders import build_storage_master_qubo
-q, meta = build_storage_master_qubo()  # defaults: 24 h, 4+4 budgets
-```
-
-### 2. `legacy_separable_compute_discharge` — negative control
-
-- **Size:** 16 × 16 (8 three-hour blocks)  
-- Discharge optimum ≡ top-3 block-mean tariff mask  
-- Used only as the soft control in the hybrid audit (fig13)  
-
----
-
-## Commands
+Run from **`code-to-commit/`**.
 
 ```bash
-cd code-to-commit
 python -m qubo.export_matrices
-python -m qubo.hybrid_decomposition
 ```
+
+Rebuild overwrites `.npy` / `_meta.json` only (no CSV).
 
 ---
 
-## Simulator note
+## Other matrices
 
-`storage_master_48_metrics.json` may report classical Metropolis / SA proxy
-draws of the same \(H(z)\). The manuscript attributes master execution to the
-CIM — replace metrics with hardware samples after loading `Q`.
+`legacy_separable_compute_discharge_*` (16 qubits) is the **negative control**
+(top-tariff / old QUBO). Not the manuscript CIM master.
 
 ---
 
 ## Citation
 
-Cite the accompanying journal manuscript when reusing these matrices or the
-hybrid decomposition.
+Cite the accompanying journal manuscript when reusing these matrices or the hybrid loop.

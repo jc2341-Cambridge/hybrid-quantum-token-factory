@@ -1,6 +1,7 @@
 """Export QUBO coupling matrices for the manuscript quantum layer.
 
-Writes NumPy (``.npy``) and CSV copies under ``qubo/matrices/``.
+Writes NumPy (``.npy``) matrices and JSON meta under ``qubo/matrices/``.
+No CSV dumps — CIM upload uses ``storage_master_48_Q.npy``.
 
 Canonical manuscript master: **48-qubit** hourly storage QUBO
 (``storage_master_48_*``). Legacy 16-qubit separable QUBO is retained as
@@ -17,7 +18,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -33,19 +33,14 @@ MAT.mkdir(parents=True, exist_ok=True)
 def _save_Q(name: str, Q: np.ndarray, const: float, meta: dict) -> None:
     np.save(MAT / f"{name}_Q.npy", Q)
     np.save(MAT / f"{name}_const.npy", np.asarray([const], dtype=float))
-    n = Q.shape[0]
-    cols = [f"q{i}" for i in range(n)]
-    df = pd.DataFrame(Q, columns=cols)
-    df.insert(0, "row", cols)
-    df.to_csv(MAT / f"{name}_Q.csv", index=False)
     # Drop non-JSON-serialisable callables from meta copies.
     clean = {k: v for k, v in meta.items() if k not in ("c_idx", "d_idx")}
     if "tariff_b" in clean:
         clean["tariff_b"] = [float(x) for x in np.asarray(clean["tariff_b"]).ravel()]
-    payload = {"name": name, "n": n, "const": float(const), **clean}
+    payload = {"name": name, "n": int(Q.shape[0]), "const": float(const), **clean}
     with open(MAT / f"{name}_meta.json", "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
-    print(f"  wrote {name}: Q shape {Q.shape}, const={const:.6g}")
+    print(f"  wrote {name}: Q shape {Q.shape}, const={const:.6g} (.npy only)")
 
 
 def main() -> None:
@@ -103,14 +98,22 @@ def main() -> None:
 
     manifest = {
         "description": (
-            "QUBO / Ising coupling matrices for the hybrid quantum--classical "
-            "token-factory study (48-qubit hourly storage master). "
-            "Market/operator raw data are not redistributed; these Q matrices "
-            "are derived artefacts that may be versioned."
+            "QUBO / Ising coupling matrices for CIM upload and hybrid "
+            "classical--quantum diagnostics. Derived artefacts only; raw "
+            "market traces are not redistributed."
         ),
         "canonical_master": "storage_master_48_Q.npy",
+        "cim_upload": [
+            "storage_master_48_Q.npy",
+            "storage_master_48_const.npy",
+            "storage_master_48_meta.json",
+        ],
         "n_qubits": 48,
+        "encoding": "q0..q23 = charge c_t; q24..q47 = discharge d_t",
+        "budgets": {"sum_c": 4, "sum_d": 4},
+        "energy": "E = x @ Q @ x + const,  x in {0,1}^48",
         "files": sorted(p.name for p in MAT.glob("*") if p.is_file()),
+        "note": "No CSV dumps. Load the .npy matrix on the CIM / annealer.",
     }
     with open(MAT / "MANIFEST.json", "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
