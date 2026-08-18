@@ -1,0 +1,11 @@
+{
+  "name": "legacy_separable_compute_discharge",
+  "n": 16,
+  "const": 71103.79574955878,
+  "kind": "legacy_separable",
+  "n_blocks": 8,
+  "high_blocks": 5,
+  "dis_blocks": 3,
+  "encoding": "even = high/low compute; odd = discharge",
+  "note": "Separable linear cardinalities; discharge optimum equals the top-3 high-tariff greedy rule. Negative control only."
+}

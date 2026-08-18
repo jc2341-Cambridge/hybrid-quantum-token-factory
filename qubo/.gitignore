@@ -1,0 +1,5 @@
+# Runtime outputs from qubo/hybrid_decomposition.py (do not commit)
+output/
+__pycache__/
+*.pyc
+.pytest_cache/
