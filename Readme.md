@@ -35,6 +35,22 @@ const = float(np.load("qubo/matrices/storage_master_48_const.npy")[0])
 
 ---
 
+## Move-WMIS pricing (`move_wmis/`)
+
+Neutral-atom / classical **move-space MWIS** pricing around a feasible 240-bit
+window (192 occupied atoms on the unit-disk register):
+
+- [`move_wmis/`](move_wmis/) — generators, conflict graph, exact MWIS, SA / AHS-surrogate samplers, no-repair apply
+- [`integrated_model/encoding.py`](integrated_model/encoding.py) — 240-site triangular unit-disk register
+
+```bash
+python -c "from move_wmis import solve_exact_mwis; from integrated_model import encoding; print(encoding.N_WEIGHTED_SITES)"
+```
+
+See [`move_wmis/README.md`](move_wmis/README.md).
+
+---
+
 ## 1. Big picture
 
 ```
@@ -77,6 +93,8 @@ Market + facility profiles  →  classical MILP (workload + SOC)
 ├── run_milp_study.py
 ├── make_figures.py
 ├── solvers.py                  ← classical MILP helpers
+├── move_wmis/                  ← move-space MWIS pricing (Aquila / classical / exact)
+├── integrated_model/           ← 240-site unit-disk encoding used by move_wmis
 ├── qubo/                       ← canonical quantum package
 │   ├── README.md
 │   ├── builders.py             ← build_storage_master_qubo (default 48)
