@@ -1,8 +1,12 @@
-# Regenerated runtime artefacts
+# Runtime artefacts (never commit)
 output/
 figures/
+data/
+*.csv
+
 __pycache__/
 **/__pycache__/
 *.pyc
 .pytest_cache/
+.venv/
 .DS_Store

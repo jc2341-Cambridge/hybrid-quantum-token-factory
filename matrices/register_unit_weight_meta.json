@@ -1,0 +1,19 @@
+{
+  "blockade_radius_um": 8.9,
+  "convention": "Q_ii=-w_i; Q_ij=Q_ji=P/2; P=1+2 max|w|",
+  "dtype": "float64",
+  "edge_sha256": "54e9e92943d8b1939e7a85a2b21089fff0c329165ac0e25927835440da3eecee",
+  "energy": "E(x) = x.T @ Q @ x",
+  "id": "register_unit_weight",
+  "kind": "physical_unit_disk_mwis",
+  "n_edges": 1274,
+  "n_occupied": 192,
+  "n_sites": 240,
+  "path_Q": "register_unit_weight_Q.npy",
+  "sha256": "d27660d10a1c0e3193d58fe8365cb0bb2112cd5fa50325423eb860eec0699d4a",
+  "shape": [
+    240,
+    240
+  ],
+  "weights": "unit weight on all 240 register sites"
+}

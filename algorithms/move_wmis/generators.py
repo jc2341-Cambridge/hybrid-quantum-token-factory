@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from integrated_model import encoding
+from algorithms import encoding
 
 from .types import LocalMove, MoveKind
 

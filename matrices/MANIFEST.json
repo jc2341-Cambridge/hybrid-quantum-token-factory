@@ -1,0 +1,27 @@
+{
+  "matrices": [
+    {
+      "id": "register_unit_weight",
+      "path_Q": "register_unit_weight_Q.npy",
+      "sha256": "d27660d10a1c0e3193d58fe8365cb0bb2112cd5fa50325423eb860eec0699d4a",
+      "shape": [
+        240,
+        240
+      ]
+    },
+    {
+      "id": "move_mwis_k64_seed104",
+      "path_Q": "move_mwis_k64_seed104_Q.npy",
+      "sha256": "07b6d5c412541cd140a42cb755f246f6b8362f4dcb9a8e40ddc1bed9a0183450",
+      "shape": [
+        64,
+        64
+      ]
+    }
+  ],
+  "policy": {
+    "excluded": "Raw market CSVs, workload traces, and campaign run logs.",
+    "included": "Derived QUBO matrices and rebuild recipes (weights/edges)."
+  },
+  "schema_version": "hqtf.matrices.v1"
+}

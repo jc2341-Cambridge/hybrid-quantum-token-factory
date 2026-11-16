@@ -1,0 +1,20 @@
+{
+  "convention": "Q_ii=-w_i; Q_ij=Q_ji=P/2 for conflict edges",
+  "dtype": "float64",
+  "energy": "E(x) = x.T @ Q @ x",
+  "id": "move_mwis_k64_seed104",
+  "instance_json": "move_mwis_k64_seed104_instance.json",
+  "kind": "move_space_mwis",
+  "locked_sha256": "07b6d5c412541cd140a42cb755f246f6b8362f4dcb9a8e40ddc1bed9a0183450",
+  "n_edges": 175,
+  "n_vertices": 64,
+  "path_Q": "move_mwis_k64_seed104_Q.npy",
+  "penalty": 2.7494531670847477,
+  "seed": 104,
+  "sha256": "07b6d5c412541cd140a42cb755f246f6b8362f4dcb9a8e40ddc1bed9a0183450",
+  "shape": [
+    64,
+    64
+  ],
+  "top_k": 64
+}

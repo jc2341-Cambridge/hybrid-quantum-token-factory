@@ -7,7 +7,7 @@ import numpy as np
 from scipy.optimize import Bounds, LinearConstraint, milp
 from scipy.sparse import coo_matrix
 
-from integrated_model import encoding
+from algorithms import encoding
 
 from .types import LocalMove
 
